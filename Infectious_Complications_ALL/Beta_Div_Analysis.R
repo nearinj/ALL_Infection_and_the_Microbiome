@@ -56,6 +56,11 @@ mod8
 mod9 <- adonis2(weighted_unifrac ~ metadata_fix$OTHER_ABX)
 mod9
 
+#found no relationship between beta diversity and age in months... HOWEVER not that this is about more complicated and perhaps
+###this should be done in a better way...
+mod10 <- adonis2(weighted_unifrac ~ metadata_fix$Age_in_months)
+mod10
+
 #overall antibitoic exposure
 mod10 <- adonis2(weighted_unifrac ~ metadata_fix$ABX_status)
 mod10
@@ -101,7 +106,7 @@ all_pcoa_plot <- ggplot(metadata_fix, aes(PC1, PC2, color=metadata_fix$State_Col
   guides(size=F, color=guide_legend(title="Infection Event")) +
   geom_path(aes(group=Patient), arrow = arrow(type="closed", angle=30, length=unit(0.4,"cm")), size=.5, color=metadata_fix$P_Color) + 
   geom_text(aes(label=Patient), color="black", size=1.75) + xlab("PC1 (56.45%)") + ylab("PC2 (11.07%)") +
-  theme_minimal() + scale_color_identity(guide=T, labels=c("Pre","Never","Post")) 
+  theme_minimal() + scale_color_identity(guide=T, labels=c("Never","Post","Pre")) 
 
 all_pcoa_plot
 
@@ -109,6 +114,54 @@ all_pcoa_plot
 library(cowplot)
 Figure2 <- plot_grid(infection_pcoa, all_pcoa_plot, labels="AUTO", rel_widths = 1.5)
 Figure2
+
+#sup fig with PC1 on Y and Days on X
+
+beta_time_plot <- ggplot(metadata_fix, aes(Days_since_therapy_start, PC1, color=metadata_fix$State_Cols)) + geom_point(size=5) +
+  guides(size=F, color=guide_legend(title = "Infection Event")) + scale_color_identity(guide=T, labels=c("Never","Post", "Pre")) +
+  ylab("PC1 (56.45%)") + xlab("Days Since Therapy Start")
+beta_time_plot
+
+cor.test(metadata_fix$Days_since_therapy_start, metadata_fix$PC1, method='spearman')
+
+beta_time_plot_infection <- ggplot(metadata_fix, aes(Days_since_therapy_start, PC1, color=metadata_fix$Infection_Col)) + geom_point(size=5) +
+  guides(size=F, color=guide_legend(title="Infectious Complication")) + scale_color_identity(guide=T, labels=c("No", "Yes")) +
+  ylab("PC1 (56.45%)") + xlab("Days Since Therapy Start")
+beta_time_plot_infection
+
+beta_age_plot <- ggplot(metadata_fix, aes(Age_at_diagnosis, PC1, color=metadata_fix$State_Cols)) + geom_point(size=5) +
+  guides(size=F, color=guide_legend(title= "Infectious Event")) + scale_color_identity(guide=T, labels=c("Never", "Post", "Pre")) +
+  ylab("PC1 (56.45%)") + xlab("Age at Diagnosis")
+beta_age_plot
+
+beta_age_plot_infection <- ggplot(metadata_fix, aes(Age_at_diagnosis, PC1, color=metadata_fix$Infection_Col)) + geom_point(size=5) +
+  guides(size=F, color=guide_legend(title= "Infectious Complication")) + scale_color_identity(guide=T, labels=c("No", "Yes")) +
+  ylab("PC1 (56.45%)") + xlab("Age at Diagnosis")
+beta_age_plot_infection
+
+sup_fig_age_beta <- plot_grid(beta_age_plot_infection, beta_time_plot_infection, labels="AUTO")
+sup_fig_age_beta
+#this plot looks good and can also explain why infection sits in 
+#include this plot
+
+wilcox.test(metadata_fix$PC1 ~ metadata_fix$Infection_in_6)
+
+
+sup_plot_review <- plot_grid(beta_time_plot_infection, beta_time_plot, labels = "AUTO")
+sup_plot_review
+#do correlation of change in beta diversity for NIC and IC patients seperately.... (not sample replicaton per patient)
+#can you correlate PC1 with time??? 
+
+
+#stat analysis
+hist(metadata_fix$Days_since_therapy_start)
+#non-normal distrubition so we will use spearman correlation.
+
+#no correlation between change in PC1 and and time...
+cor.test(metadata_fix$PC1, metadata_fix$Days_since_therapy_start, method="spearman", exact=F)
+
+#this however doesn't take into account the total variability of the samples over time...
+#i.e samples may be moving up and then down 
 
 #make sup fig 4
 #vanco exposure pcoa
